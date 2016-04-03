@@ -1,0 +1,66 @@
+#!/bin/bash
+# vars
+
+#backup local
+PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/sbin:/usr/local/bin'
+d0=(`df -h /data0 | awk '{print $5}' | grep -v capacity  | cut -d "%" -f1 -| grep -v Use`)                                                                      
+d1=(`df -h /data0/backup-data | awk '{print $5}' | grep -v capacity  | cut -d "%" -f1 -| grep -v Use`)
+                                                                                                                                                                     
+if [[ -n $d1 ]];then
+Per_data0=$d1
+else
+Per_data0=$d0
+fi
+
+# get space from data0/                                                                                                                                                
+Spc_data0=`sh /hupu/cron/backup/spc.sh`                                                                                                                                
+#backup_dir                                                                                                                                                            
+backup_dir='/data0/dbbackup'                                                                                                                                             
+                                                                                                                                                                       
+#get source_dir                                                                                                                                                        
+mysql=`which mysql`
+db_user="root"                                                                                                                                                         
+db_password="cgddnai!@#.hp"
+db_socket='/tmp/mysql.sock'
+db_port=`mysql -u$db_user -p$db_password -S $db_socket -e "show variables like 'port%'" |grep -v Variable | awk '{print $2}'`                                                    
+mysql_conn="$mysql -u$db_user -p$db_password -S $db_socket"
+
+# db_socket=`mysql -u$db_user -p$db_password -e "show variables like '%socket%'" |grep -iv Var| awk '{print $2}'`
+#source_dir=`mysql -u$db_user -p$db_password -e "show variables like '%datadir%'" | grep -v V | awk '{print $2}'`
+                                                                                                                                                                       
+#get db full size                                                                                                                                                      
+data_file_size=`sh /hupu/cron/backup/data_spc.sh`                                                                                                                      
+                                                                                                                                                                       
+#db_full_backup                                                                                                                                                        
+db_files='/etc/my.cnf'                                                                                                                                                 
+#date_dir=`date +%F`                                                                                                                                                   
+date_dir=`date  +%Y%m%d`                                                                                                                                               
+incr1_day=`expr $date_dir - 1`                                                                                                                                         
+incr2_day=`expr $date_dir - 2`                                                                                                                                         
+incr3_day=`expr $date_dir - 3`
+
+# backup remote                                                                           
+input=$2
+ps='/hupu/cron/backup/rsync.ps'                                                                         
+target='hupu@192.168.1.42'                                                                              
+#ip3=`ifconfig | grep 'inet addr:192.168' | awk -F ':' '{print $2}'|awk '{print $1}'| awk -F '.' '{print $3}'`
+#ip4=`ifconfig | grep 'inet addr:192.168' | awk -F ':' '{print $2}'|awk '{print $1}'| awk -F '.' '{print $4}'`
+ip_suffix=`ip addr |grep -o '192\.168\.[0-9]\.[0-9]*/24' |awk -F'/' '{$1=substr($1,9,7); print $1}' |head -1`
+vip=`ip addr |grep -o '192\.168\.[0-9]\.[0-9]*/32' |wc -l`
+dt=`date +%w`
+                                                                                                        
+hostname=`hostname | awk -F '(-|_)' '{print $1}'`
+
+# record flag
+object_id=`cat /root/aboutme|grep hupu_object_id|cut -d = -f 2`
+success='Backup success.'
+failed='Backup failed.Check up failed log in /tmp.'
+datetime=`date '+%Y-%m-%d %T'`
+
+#mydumper
+dblist=`mysql -u$db_user -p$db_password -S $db_socket -e "select schema_name from information_schema.SCHEMATA where schema_name not in ('information_schema','mysql','performance_schema','test');" | grep -iv schema`
+
+#repair_link
+num=`ls /data0/dbbackup/ | wc -l`
+
+local_ip={{ inventory_hostname }}

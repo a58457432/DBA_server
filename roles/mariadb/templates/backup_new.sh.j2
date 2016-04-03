@@ -1,0 +1,95 @@
+#!/bin/bash
+# backup for mysql
+# by sjh
+
+source /hupu/cron/backup/pub_vars
+
+backup_full() {
+    args="--user=$db_user --password=$db_password --socket=$db_socket  --no-timestamp --defaults-file=$db_files"
+    innobackupex $args  $backup_dir/$date_dir-full >> /tmp/full_$date_dir.log 2>&1;
+    succeed_msg=`cat /tmp/full_$date_dir.log | grep "innobackupex: completed OK\!" | wc -l`
+    fail_msg=`cat /tmp/full_$date_dir.log | grep "Error" | wc -l`
+}
+
+push_backup() {
+    efdir=/data0/dbbackup/
+    if (( $dt == $input )); then
+        backup_piece=`ls $fdir | sort -nr |head -1`
+        rsync -a --password-file=/hupu/cron/backup/rsync.ps $backup_piece hupu@192.168.1.42::backup/$hostname$ip_suffix/
+    else
+        echo "rsync fail"
+    fi
+} 
+
+repair_link() {
+    killdir=`/bin/ps aux |grep '/data0/backup-data/db' |awk '{print $2}'`
+    for d_pid in $killdir; do
+        /bin/kill $d_pid
+    done
+    killfile=`/bin/ps aux |grep 'backup_new.sh' |awk '{print $2}'`
+    for f_pid in $killdir; do
+        /bin/kill $f_pid
+    done
+}
+
+has_problems_yes() {
+    curl http://baixs.pub.hupu.com/api/benchs -XPUT -d "{\"ip\": \"192.168.2.219\"}" -H "Content-Type:application/json" -ubaixs:hoopchina
+    sleep 180
+}
+
+has_problems_no() {
+    curl http://baixs.pub.hupu.com/api/benchs -XDELETE -d "[{\"ip\": \"192.168.2.219\"}]" -H "Content-Type:application/json" -ubaixs:hoopchina
+}
+
+case $1  in
+    full)
+        repair_link
+        if [ $vip == 0 ];then 
+            if [[ $Spc_data0 -lt $data_file_size || $Per_data0 -ge 50 ]]; then    
+                cd $backup_dir
+                while [ $Per_data0 -ge 50 ];do
+                    ls |awk '{print $NF}'|head -1 | xargs rm -rf
+                done
+                has_problems_yes
+                backup_full
+            else
+                has_problems_yes
+                backup_full
+            fi
+            if   [[ $data_file_size -lt 51200 ]];then
+                    echo "backup < 50G ; compress~"
+                    cd $backup_dir
+                    tar zcf $date_dir-full.tar.gz $date_dir-full/ && rm -rf $date_dir-full/
+            elif [[ $data_file_size -ge 51200 && $data_file_size -lt 102400 ]];then
+                    echo " 50<= backup < 100G"
+                    cd $backup_dir
+                    tar zcf $incr1_day-full.tar.gz $incr1_day-full/ && rm -rf $incr1_day-full/                     
+            elif [[ $data_file_size -gt 102400 ]];then
+                    echo "backup > 100G"
+            fi        
+        else
+            echo "vip is alive"
+            break
+        fi
+        ;;
+    *)
+    echo "please add the parameters!"
+    ;;
+esac
+
+
+
+# backup remote
+push_backup
+has_problems_no
+
+#delete +7
+del() {
+    cd $backup_dir
+    find -name '*' -ctime $1 | xargs rm -rf
+}
+
+del +7
+
+echo "##################################################################"
+echo $date_dir

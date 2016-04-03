@@ -1,0 +1,28 @@
+- name: make some directory
+  file: path={{ item }} state=directory
+  with_items:
+    - '/data0/backup-data/db'
+    - '/hupu/cron/backup'
+
+- name: make symbolic links
+  file: src=/data0/backup-data/db dest=/data0/dbbackup state=link
+
+- name: copy scripts
+  copy: src={{ item }} dest=/hupu/cron/backup/{{ item }} mode=755
+  with_items:
+    - 'data_spc.sh'
+    - 'spc.sh'
+
+- name: copy config
+  copy: src={{ item }} dest=/hupu/cron/backup/{{ item }} mode=600
+  with_items:
+    - 'rsync.ps'
+
+- name: generate pub_vars
+  template: src=pub_vars.j2 dest=/hupu/cron/backup/pub_vars mode=600
+
+- name: generate backup_new.sh
+  template: src=backup_new.sh.j2 dest=/hupu/cron/backup/backup_new.sh mode=755
+
+- name: add cron backup
+  cron: name='backup use xtrabackup and tar' minute=00 hour=03 job='/bin/sh /hupu/cron/backup/backup_new.sh full 3 >> /dev/null 2>&1'

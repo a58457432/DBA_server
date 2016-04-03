@@ -1,0 +1,90 @@
+[mysql]
+prompt = {{ MariaDB_prompt }}
+no_auto_rehash
+default_character_set = {{ MariaDB_default_character_set }}    #指定客户端连接字符集，等同set names utf8. <character_set_client, character_set_connection, character_set_results>。
+
+[mysqld]
+pid-file = {{ MariaDB_pid_file }}
+socket = {{ MariaDB_socket }}       #mysql sock文件存放目录（该目录可以改动，但必需可以让mysql有写权限）
+user = {{ MariaDB_user }}                 #启动mysql数据库的用户
+port = {{ MariaDB_port }}                        #mysql守护进程启动时监听的端口
+skip_external_locking           #避免mysql外部锁定，减少出错机率增强稳定性(mysql5.5配置)
+skip_name_resolve               #启动时和运行时跳过域名查询(mysql5.5不能用)
+query_cache_type = {{ MariaDB_query_cache_type }}            #0或OFF(禁止使用缓存)；1或ON(充许使用缓存，SELECT SQL_NO_CACHE查询语句除外)；2或DEMAND(仅对SELECT SQL_CACH查询语句启动缓存)
+query_cache_limit = {{ MariaDB_query_cache_limit }}          #最大缓存结果大小
+query_cache_min_res_unit = {{ MariaDB_query_cache_min_res_unit }}
+query_cache_size = {{ MariaDB_query_cache_size }}       #查询缓存大小
+read_buffer_size = {{ MariaDB_read_buffer_size }}           #select时所能使用的缓冲区大小，每连接独享。
+read_rnd_buffer_size = {{ MariaDB_read_rnd_buffer_size }}      #order by | group by所使用的排序缓存大小，每连接独享。
+open_files_limit = {{ MariaDB_open_files_limit }}    #MySQL文件描述符限制   
+sort_buffer_size = {{ MariaDB_sort_buffer_size }}           #order by | group by，每连接独享。
+join_buffer_size = {{ MariaDB_join_buffer_size }}           #外链缓冲大小，每连接独享。
+key_buffer = {{ MariaDB_key_buffer }}
+key_buffer_size = {{ MariaDB_key_buffer_size }}
+table_cache = {{ MariaDB_table_cache }}              #为所有线程打开表的数量，同时须修改文件描述符默认大小。增加些值可有效避免频繁打开表产生的开销。
+max_connections = {{ MariaDB_max_connections }}        #最大允许多少个tcp进程连接
+back_log = {{ MariaDB_back_log }}                  #指定可能的连接数，当MySQL主线程在很短的时间内接收到非常多的请求时，该参数生效。达到该参数阀值会短暂停止响应新的请求(推置值 connection x 2)。
+max_connect_errors = {{ MariaDB_max_connect_errors }}     #mysql实例在大量发时，而mysql本身处理不过来，就会产生最大连接错误，当达到设定值后会死锁实例，新的连接将无法进来，而老的连接正常。mysql有相应的自动timeout机制来控制将最大连接错误回滚成0。
+wait_timeout = {{ MariaDB_wait_timeout }}               #断开空闲时间超过此值的连接
+interactive_timeout = {{ MariaDB_interactive_timeout }}      #服务器在关闭之前在一个交互连接上等待的秒数（一个交互的客户端被定义为对mysql_real_connect()使用CLIENT_INTERACTIVE选项的客户），默认为28800
+tmp_table_size = {{ MariaDB_tmp_table_size }}          #临时表大小
+slow_query_log = {{ MariaDB_slow_query_log }}     #记录慢查询，对SQL优化很有帮助
+slow_query_log_file = {{ MariaDB_slow_query_log_file }}
+long_query_time = {{ MariaDB_long_query_time }}          #设置执行时间多长的查询为慢查询, 默认单位为秒(s)
+server_id = {{ MariaDB_server_id }}                 #服务器id 主从时必需设置
+binlog_ignore_db = {{ MariaDB_binlog_ignore_db }}
+log_bin = {{ MariaDB_log_bin }}             #打开binlog日志
+log_bin_index = {{ MariaDB_log_bin_index }}   #binlog 索引文件
+binlog_format = {{ MariaDB_binlog_format }}        #binlog格式[STATEMENT(基于语句)|ROW(基于行)|MIXED(混合模式)]
+binlog_cache_size = {{ MariaDB_binlog_cache_size }}           #binlog 缓存大小，调节该值大小可避免使用文件
+max_binlog_cache_size = {{ MariaDB_max_binlog_cache_size }}      #默认4GB，限制缓存多语句事务的缓冲区总大小，当某个事务大于该值，将会失败并回滚
+max_binlog_size = {{ MariaDB_max_binlog_size }}          #指定binlog文件最大容量，超过些值会自动回滚binlog
+expire_logs_days = {{ MariaDB_expire_logs_days }}               #binlog保存最近7天的文件
+bulk_insert_buffer_size = {{ MariaDB_bulk_insert_buffer_size }}  #insert … select … ,insert …(..),(..),(..) ,load data infile 有较大的加速效果, 针对每线程
+myisam_sort_buffer_size = {{ MariaDB_myisam_sort_buffer_size }} #myisam引擎排序缓冲大小，即MyISAM表发生变化时重新排序所需的缓冲区大小
+myisam_max_sort_file_size = {{ MariaDB_myisam_max_sort_file_size }}  #myisam引擎最大允许排序文件大小
+myisam_repair_threads = {{ MariaDB_myisam_repair_threads }}       #mysql修复线程数
+myisam_recover                       #启动MySQL时自动修复损坏索引的表
+max_heap_table_size = {{ MariaDB_max_heap_table_size }}
+max_allowed_packet = {{ MariaDB_max_allowed_packet }}        #导入时指定单表最大文件
+thread_concurrency = {{ MariaDB_thread_concurrency }}            #最大的并发连接线程数，取CPU的核心数x2，超线程CPU再x2
+thread_cache_size = {{ MariaDB_thread_cache_size }}          #每个thread cache 池可以最多缓存多少个线程
+thread_stack = {{ MariaDB_thread_stack }}                #每个线程被创建时分配的内存空间大小
+binlog_annotate_row_events = {{ MariaDB_binlog_annotate_row_events }}               # MySQL binlog ROW 模式下binlog文个中记录客户端程序执行是的具体语句
+replicate_annotate_row_events = {{ MariaDB_replicate_annotate_row_events }} 
+big_tables = {{ MariaDB_big_tables }}        #MySQL 大表支持
+log_error = {{ MariaDB_log_error }}          #MySQL error log文件名
+relay_log = {{ MariaDB_relay_log }}              #slave relay log日志
+relay_log_index = {{ MariaDB_relay_log_index }}  #slave relay log日志索引文件
+#slave-skip-errors =
+#log_slave_updates = {{ MariaDB_log_slave_updates }}            #slave 将master replication过来的binlog日志写到本地binlog里面(服务器即做master又做slave时必需打开)
+## Mariadb Semisynchronous
+#rpl_semi_sync_master_enabled = {{ MariaDB_rpl_semi_sync_master_enabled }}       # 开启Mariadb master 半同步功能
+#rpl_semi_sync_slave_enabled = {{ MariaDB_rpl_semi_sync_slave_enabled }}         # 开启Mariadb slave 半同步功能
+## Mariadb Thread Pool configure
+#thread_handling = {{ MariaDB_thread_handling }}     #开启 Mariadb 线程池功能, default one-thread-per-connection [no-threads|pool-of-threads]
+#thread_pool_size =  {{ MariaDB_thread_pool_size }}                #default 16  线程池大小
+#thread_pool_max_threads = {{ MariaDB_thread_pool_max_threads }}         #default 500 最大的线程池数量
+#thread_pool_idle_timeout = {{ MariaDB_thread_pool_idle_timeout }}         #default 60s , 空闲的线程退出时间间隔
+
+
+innodb_support_xa = {{ MariaDB_innodb_support_xa }}              #开启或关闭Innodb分布式事务. 如未使用分布式事务, 强列建议关闭. 减少磁盘刷新次数.
+innodb_additional_mem_pool_size = {{ MariaDB_innodb_additional_mem_pool_size }}    #存储数据目录信息和其它内部数据结构的内存池大小, 表越多需要的内存也越多.默认为1MB
+innodb_buffer_pool_size = {{ MariaDB_innodb_buffer_pool_size }}       #Innodb 表缓存池大小
+innodb_file_io_threads = {{ MariaDB_innodb_file_io_threads }}              #innodb io线程数，默认为4个. 在unix类系统中设置大于4的值是没有意义的.windows则不同.
+innodb_thread_concurrency = {{ MariaDB_innodb_thread_concurrency }}     #innodb 并发线程数.设置值大于0时,innodb每次接MySQL线程调用时都将进一次并发性检测,看是否大于些值.如果show innodb status 中发现大量"waiting in InnoDB queue " 则可将值设成0.让系统自已控制
+innodb_flush_log_at_trx_commit = {{ MariaDB_innodb_flush_log_at_trx_commit }}   #innodb日志写入磁盘设置,0 : 每秒一次 ,1:每个事务完成时提交, 2:每次提交但不对日志写回磁盘操作,刷到磁盘上还是每秒一次.不受事务结束引响. 当设置为0时任何导至mysqld进程的崩溃都会删除前一秒的事务日志,当设为2时,只有操作系统崩溃或掉电才会删除最后一秒的事务.(当然磁盘回写也会导至事务的丢失,而这是磁盘的默认选项). 该选项默认值为 1.
+innodb_log_buffer_size = {{ MariaDB_innodb_log_buffer_size }}         #innodb log缓存大小,默认为1MB. 频繁写入时才修改此值到8MB或以上,因每秒(跟据innodb_flush_log_at_trx_commit值决定刷新缓存到磁盘的时间间隙)会被刷一次到磁盘. 不建议加很大
+innodb_log_files_in_group = {{ MariaDB_innodb_log_files_in_group }}
+innodb_lock_wait_timeout = {{ MariaDB_innodb_lock_wait_timeout }}    #Innodb引擎表死锁时等待的时间, 超出此时间事务还未执行成功, 此事务将回滚. 跟据需要设置些参数
+innodb_file_per_table = {{ MariaDB_innodb_file_per_table }}       #为每个innodb 表单独创建文件存放. 默认所有innodb表全部存放在ibdata1
+innodb_open_files = {{ MariaDB_innodb_open_files }}       #Innodb 一次最多可以打开多少表,默认为300,最少值为10. 些选项跟innodb_file_per_table是多表还是单表存放innodb文件相关
+innodb_read_io_threads = {{ MariaDB_innodb_read_io_threads }}        #Innodb 读取磁盘io线程数，默认为4. 如果磁盘性能OK, 可以加大些值来提高性能。
+innodb_write_io_threads = {{ MariaDB_innodb_write_io_threads }}       #Innodb 写入磁盘io线程数，默认为4. 如果磁盘性能OK, 可以加大些值来提高性能。
+innodb_io_capacity = {{ MariaDB_innodb_io_capacity }}          #Innodb 刷新脏页到磁盘，指每秒刷新200个脏页，此值为默认。写密集型DB需加大此值。
+innodb_max_dirty_pages_pct = {{ MariaDB_innodb_max_dirty_pages_pct }}     #加快innodb脏页刷新频率减少恢得利 时间，也可保证磁盘的IP负载。值为百分比，默认90%
+innodb_adaptive_flushing = {{ MariaDB_innodb_adaptive_flushing }}    #自适应刷新脏页,
+
+[mysqldump]
+quick
+max_allowed_packet = {{ MariaDB_max_allowed_packet }}         #导出时指定单表最大文件

@@ -1,0 +1,61 @@
+- set_fact: project={{ hostname.split('-')[0] }}
+  when: hostname is defined
+
+
+- name: install MariaDB
+  yum: name=MySQL-python state=latest
+
+
+- name: mkdir MariaDB dir
+  file: path={{ item }} state=directory owner=mysql group=mysql mode=0755
+  with_items: 
+    - "{{ MariaDB_datadir }}"
+    - "{{ MariaDB_log_dir }}"
+
+- name: make some symbolic links
+  file: src=/usr/local/webserver/DBServer/MariaDB/bin/{{ item }} dest=/usr/local/bin/{{ item }} owner=root group=root state=link
+  with_items:
+    - mysql
+    - mysqladmin
+    - mysqldump
+    - mysqldumpslow
+
+- name: generate /etc/init.d/mysqld
+  template: src=mysqld.j2 dest=/etc/init.d/mysqld owner=root group=root mode=0755 
+
+- set_fact: MariaDB_server_id={{ object_id }}
+  when: object_id is defined
+
+- name: generate /etc/my.cnf
+  template: src=my.cnf.j2 dest=/etc/my.cnf owner=root group=root mode=0644
+
+- name: test if MariaDB initialized
+  command: ls {{ MariaDB_datadir }}
+  register: dataexist
+
+- name: initialize
+  shell: "{{ MariaDB_basedir }}/scripts/mysql_install_db --datadir={{ MariaDB_datadir }} --basedir={{ MariaDB_basedir }} --defaults-file=/etc/my.cnf"
+  when: dataexist.stdout.find('mysql') == -1
+
+- name: mysqld start and start on boot
+  service: name=mysqld state=started enabled=yes
+
+- name: add MariaDB slave user
+  mysql_user: name={{ MariaDB_sync_user }} password={{ MariaDB_sync_password }} host=192.168.% priv=*.*:"REPLICATION SLAVE,SELECT,REPLICATION CLIENT" state=present  login_unix_socket={{ MariaDB_socket }}
+
+- name: add MariaDB monitor user
+  mysql_user: name={{ MariaDB_monitor_user }} password={{ MariaDB_monitor_password }} host=192.168.% priv=*.*:"REPLICATION SLAVE,SELECT,REPLICATION CLIENT" state=present  login_unix_socket={{ MariaDB_socket }}
+
+- name: delete blank user
+  mysql_user: name= host={{ item }} state=absent login_unix_socket={{ MariaDB_socket }}
+  with_items:
+    - 'localhost'
+    - "{{ ansible_nodename }}"
+
+- name: delete nouse root
+  mysql_user: name=root host={{ item }} state=absent login_unix_socket={{ MariaDB_socket }}
+  when: item != 'localhost'
+  with_items:
+    - "{{ ansible_hostname }}"
+    - "{{ ansible_nodename }}"
+    - '::1'

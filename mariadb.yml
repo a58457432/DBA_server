@@ -1,0 +1,6 @@
+---
+
+- name: install mariadb
+  hosts: all
+  roles:
+    - mariadb
