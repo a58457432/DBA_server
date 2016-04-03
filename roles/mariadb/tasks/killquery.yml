@@ -1,0 +1,4 @@
+- name: copy config
+  copy: src={{ item }} dest=/hupu/cron/{{ item }} mode=755
+  with_items:
+    - 'killquery.py'

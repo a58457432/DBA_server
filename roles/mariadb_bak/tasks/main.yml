@@ -1,5 +1,8 @@
 - include: install.yml tags=install
 - include: backup.yml tags=backup,install
+- include: stalk.yml tags=stalk
+- include: monitor.yml tags=monitor
+- include: killquery.yml tags=killquery
 
 - name: register to service center
   local_action: etcd_record etcd_host={{etcd_short_host}} port={{ etcd_port }} name=labels value={{role_path.split('/')[-1]}} host={{inventory_hostname}}
@@ -8,3 +11,4 @@
     - register
     - install
     - backup
+    - monitor

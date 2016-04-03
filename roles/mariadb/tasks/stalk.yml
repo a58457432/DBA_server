@@ -1,0 +1,7 @@
+- name: copy config
+  copy: src={{ item }} dest=/hupu/cron/{{ item }} mode=755
+  with_items:
+    - 'collect_stalk.py'
+
+- name: add cron backup
+  cron: name='db_information_collect' minute=*/1 job='/usr/bin/python /hupu/cron/collect_stalk.py' 

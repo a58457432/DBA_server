@@ -1,0 +1,5 @@
+- name: cron.mysql.processlist.sh
+  template: src=cron.mysql.processlist.sh.j2 dest=/hupu/cron/cron.mysql.processlist.sh mode=645
+
+- name: add cron mysql processlist monitor
+  cron: name='mysql processlist monitor' job='/bin/bash /hupu/cron/cron.mysql.processlist.sh'

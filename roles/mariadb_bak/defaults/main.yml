@@ -11,10 +11,10 @@ MariaDB_user : mysql
 MariaDB_port : 3306
 MariaDB_character_set_server: utf8mb4
 MariaDB_log_bin_trust_function_creators: 1
-MariaDB_query_cache_type : 1
+MariaDB_query_cache_type : 0
 MariaDB_query_cache_limit : 8M
 MariaDB_query_cache_min_res_unit : 4k
-MariaDB_query_cache_size : 512M
+MariaDB_query_cache_size : 128M
 MariaDB_read_buffer_size : 2M
 MariaDB_read_rnd_buffer_size : 16M
 MariaDB_open_files_limit : 102400
@@ -38,12 +38,12 @@ MariaDB_log_dir : /data0/db-binlog/hupu.com/{{ project }}
 MariaDB_log_bin : /data0/db-binlog/hupu.com/{{ project }}/mysql-bin
 MariaDB_log_bin_index : /data0/db-binlog/hupu.com/{{ project }}/mysql-bin.index
 MariaDB_binlog_format : ROW
-MariaDB_binlog_cache_size : 4M
+MariaDB_binlog_cache_size : 32k
 MariaDB_max_binlog_cache_size : 8M
 MariaDB_max_binlog_size : 512M
-MariaDB_expire_logs_days : 60
+MariaDB_expire_logs_days : 14
 MariaDB_bulk_insert_buffer_size : 64M
-MariaDB_myisam_sort_buffer_size : 512M
+MariaDB_myisam_sort_buffer_size : 256M
 MariaDB_myisam_max_sort_file_size : 1G
 MariaDB_myisam_repair_threads : 1
 MariaDB_max_heap_table_size : 512M
@@ -63,8 +63,8 @@ MariaDB_innodb_lock_wait_timeout : 60
 MariaDB_innodb_file_per_table : 1
 MariaDB_innodb_open_files : 1024
 MariaDB_innodb_read_io_threads : 16
-MariaDB_innodb_write_io_threads : 8
-MariaDB_innodb_io_capacity : 2000
+MariaDB_innodb_write_io_threads : 16
+MariaDB_innodb_io_capacity : 4000
 MariaDB_innodb_max_dirty_pages_pct : 70
 MariaDB_innodb_adaptive_flushing : ON
 MariaDB_big_tables : ON
@@ -86,3 +86,4 @@ MariaDB_thread_pool_max_threads: 2048
 MariaDB_thread_pool_idle_timeout: 600
 MariaDB_log_slave_updates: 1
 MariaDB_pid_file: mysql.pid
+MariaDB_general_log_file: mysql-general.log

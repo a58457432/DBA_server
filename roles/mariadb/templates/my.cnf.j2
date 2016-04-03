@@ -56,6 +56,7 @@ big_tables = {{ MariaDB_big_tables }}        #MySQL 大表支持
 log_error = {{ MariaDB_log_error }}          #MySQL error log文件名
 relay_log = {{ MariaDB_relay_log }}              #slave relay log日志
 relay_log_index = {{ MariaDB_relay_log_index }}  #slave relay log日志索引文件
+general_log_file = {{ MariaDB_general_log_file }}    #MySQL general log日志文件名
 #slave-skip-errors =
 #log_slave_updates = {{ MariaDB_log_slave_updates }}            #slave 将master replication过来的binlog日志写到本地binlog里面(服务器即做master又做slave时必需打开)
 ## Mariadb Semisynchronous

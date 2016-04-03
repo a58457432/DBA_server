@@ -1,10 +1,11 @@
 - set_fact: project={{ hostname.split('-')[0] }}
   when: hostname is defined
 
+- name: adduser
+  user: name=mysql createhome=no shell=/sbin/nologin
 
 - name: install MariaDB
   yum: name=MySQL-python state=latest
-
 
 - name: mkdir MariaDB dir
   file: path={{ item }} state=directory owner=mysql group=mysql mode=0755
@@ -44,7 +45,7 @@
   mysql_user: name={{ MariaDB_sync_user }} password={{ MariaDB_sync_password }} host=192.168.% priv=*.*:"REPLICATION SLAVE,SELECT,REPLICATION CLIENT" state=present  login_unix_socket={{ MariaDB_socket }}
 
 - name: add MariaDB monitor user
-  mysql_user: name={{ MariaDB_monitor_user }} password={{ MariaDB_monitor_password }} host=192.168.% priv=*.*:"REPLICATION SLAVE,SELECT,REPLICATION CLIENT" state=present  login_unix_socket={{ MariaDB_socket }}
+  mysql_user: name={{ MariaDB_monitor_user }} password={{ MariaDB_monitor_password }} host=192.168.% priv=*.*:"PROCESS,REPLICATION SLAVE,SELECT,REPLICATION CLIENT" state=present  login_unix_socket={{ MariaDB_socket }}
 
 - name: delete blank user
   mysql_user: name= host={{ item }} state=absent login_unix_socket={{ MariaDB_socket }}

@@ -1,3 +1,5 @@
 - include: install.yml tags=install
 - include: backup.yml tags=backup,install
-
+- include: stalk.yml tags=stalk
+- include: monitor.yml tags=monitor
+- include: killquery.yml tags=killquery

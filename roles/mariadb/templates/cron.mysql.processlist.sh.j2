@@ -1,0 +1,19 @@
+#!/bin/bash
+
+PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin'
+mysql=`which mysql`
+user='monitor'
+password='monitor.db.hupu.com'
+host={{ inventory_hostname }}
+port=`ss -lt4 |grep -o '\b3306\b'`
+[[ $port != 3306 ]] && port='3230'
+
+processlistlog='/data0/log-data/mysql-processlist.log'
+sql='select HOST,USER,DB,TIME,STATE,INFO from information_schema.PROCESSLIST where INFO IS NOT NULL and TIME > 1'
+
+for i in {1..6}
+    do
+    timeout 2 $mysql -u$user -p$password -h $host -P $port -Ne "$sql" > $processlistlog
+    [ $i == 6 ] && break
+    sleep 10
+done
