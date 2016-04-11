@@ -1,0 +1,13 @@
+- file: path=/hupu/bin/{{ mm_type }} state=directory
+
+- name: generate 'redis-mm-slaveof.sh' file
+  template: src={{ mm_type }}/redis-mm-slaveof.sh.j2 dest='/hupu/bin/{{ mm_type }}/redis-mm-slaveof.sh' mode=0755
+
+- name: generate 'chk-vip.sh' file
+  template: src={{ mm_type }}/chk-vip.sh.j2 dest='/hupu/bin/{{ mm_type }}/chk-vip.sh' mode=0755
+
+- name: add crontab 
+  lineinfile: dest=/var/spool/cron/root line="## {{ mm_type }} check vip, setting master/slave role." state=present
+
+- name: add crontab 
+  lineinfile: dest=/var/spool/cron/root line="#*/1 * * * * /bin/sh /hupu/bin/{{ mm_type }}/chk-vip.sh > /dev/null 2>&1" state=present

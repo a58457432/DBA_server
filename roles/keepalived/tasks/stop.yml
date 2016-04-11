@@ -1,0 +1,2 @@
+- name: ensure stopped
+  service: name=keepalived state=stopped

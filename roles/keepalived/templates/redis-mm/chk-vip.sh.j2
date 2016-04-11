@@ -1,0 +1,22 @@
+#!/bin/bash
+
+PATH='/bin:/usr/bin:/sbin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+redis_cli='/usr/local/bin/redis-cli'
+inst=(`ps -ef |grep redis-server |awk '{print $NF}' |grep -v 'redis-server' |awk -F':' '{print $NF}'`)
+
+for ((i=1;i<=20;i++))
+    do
+    chk_vip=`/sbin/ip addr |grep -o "192.168.[0-9].[0-9]*/32" |awk -F'/' '{print $1}'`
+    if [[ $chk_vip == '' ]]
+        then
+        for port in ${inst[*]}
+            do
+            role=`$redis_cli -p $port info replication |grep 'role' |awk -F':' '{print $2}' |sed 's/\r//g'`
+            if [[ $role != slave ]]
+                then
+                source /hupu/bin/redis-mm/redis-mm-slaveof.sh slave
+            fi
+        done
+    fi
+    sleep 3
+done

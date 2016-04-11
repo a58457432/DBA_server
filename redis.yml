@@ -1,3 +1,6 @@
-11
-222
-3333
+---
+
+- name: install redis
+  hosts: all
+  roles:
+    - redis

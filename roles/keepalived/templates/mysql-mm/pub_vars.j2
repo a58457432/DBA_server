@@ -1,0 +1,17 @@
+#!/bin/bash
+# Author: HUPU.COM
+# Last modified: 2015-07-13
+
+PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+mysql=`which mysql`
+mysqladmin=`which mysqladmin`
+user='root'
+password='cgddnai!@#.hp'
+mysqld='/etc/init.d/mysqld'
+keepalived='/etc/init.d/keepalived'
+vip='{{ vip }}'
+mysql_socket='/tmp/mysql.sock'
+mysql_conn="$mysql -u$user -p$password -S $mysql_socket"
+mysqladmin_conn="$mysqladmin -u$user -p$password -S $mysql_socket"
+
+chk_keepalived=`pgrep keepalived |wc -l`

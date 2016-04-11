@@ -1,0 +1,6 @@
+---
+
+- name: install keepalived
+  hosts: all
+  roles:
+    - keepalived

@@ -1,0 +1,5 @@
+- name: install keepalived
+  yum: name=keepalived state=latest
+
+- name: ensure keepalived started and start onboot
+  service: name=keepalived state=started enabled=yes

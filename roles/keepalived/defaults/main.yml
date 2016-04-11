@@ -1,0 +1,9 @@
+mm_priority: 90
+mm_router_id: "mm{{ vip.split('.')[2] }}{{ vip.split('.')[3] }}"
+mm_id: "{{ vip.split('.')[3] }}"
+mm_auth_pass: "mm{{ vip.split('.')[2] }}{{ vip.split('.')[3] }}"
+mm_vip: "{{ vip }}"
+mm_interface: bond0
+mm_type: basic-mm
+mm_m1_ip: "{{ vars.play_hosts[0] }}"
+mm_m2_ip: "{{ vars.play_hosts[1] }}"

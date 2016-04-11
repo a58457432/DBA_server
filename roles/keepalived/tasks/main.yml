@@ -1,0 +1,5 @@
+- include: install.yml tags=install
+- include: start.yml tags=start
+- include: stop.yml tags=stop
+- include: reconfig.yml tags=reconfig,install
+- include: reload.yml tags=reload

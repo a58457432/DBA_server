@@ -1,0 +1,20 @@
+- set_fact: mm_interface="eth0"
+  when: ansible_bond0 is not defined
+
+- set_fact: mm_priority=200
+  when: inventory_hostname == vars.play_hosts[0]
+
+- set_fact: mm_type=mysql-mm
+#  when: hostname | search("db")
+
+#- set_fact: mm_type=redis-mm
+#  when: hostname | search("redis")
+
+- name: generate keepalived configuration
+  template: src={{ mm_type }}/keepalived.conf.j2 dest=/etc/keepalived/keepalived.conf
+
+- include: mysql-mm-reconfig.yml
+  when: mm_type == "mysql-mm"
+
+- include: redis-mm-reconfig.yml
+  when: mm_type == "redis-mm"

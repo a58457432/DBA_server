@@ -1,0 +1,24 @@
+global_defs {
+        router_id {{ mm_router_id }}
+}
+
+vrrp_instance {{ mm_router_id }} {
+        state BACKUP
+        interface {{ mm_interface }}
+        virtual_router_id {{ mm_id }}
+        priority {{ mm_priority }}
+        advert_int 1
+        garp_master_delay 1
+        nopreempt
+        authentication {
+            auth_type PASS
+            auth_pass {{ mm_auth_pass }}
+        }
+        virtual_ipaddress {
+            {{ mm_vip }}
+        }
+        notify_master "/hupu/bin/{{ mm_type }}/redis-mm-slaveof.sh master"
+        notify_backup "/hupu/bin/{{ mm_type }}/redis-mm-slaveof.sh slave"
+        notify_fault "/hupu/bin/{{ mm_type }}/redis-mm-slaveof.sh slave"
+        notify_stop "/hupu/bin/{{ mm_type }}/redis-mm-slaveof.sh slave"
+}

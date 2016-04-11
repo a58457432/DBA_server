@@ -1,0 +1,13 @@
+- file: path=/hupu/bin/{{ mm_type }} state=directory
+
+- name: copy keepalive check scripts
+  copy: src="{{ mm_type }}/{{ item }}" dest="/hupu/bin/{{ mm_type }}/{{ item }}" mode=0700
+  with_items:
+    - change.read_only.role.sh
+    - chk_mysqld.sh
+
+- name: generate 'pub_vars' file
+  template: src="{{ mm_type }}/pub_vars.j2" dest="/hupu/bin/{{ mm_type }}/pub_vars" mode=0600
+
+#- name: add crontab
+#  cron: name="{{ mm_type }} scripts" job="/bin/sh /hupu/bin/{{ mm_type }}/chk_mysqld.sh >& /dev/null"

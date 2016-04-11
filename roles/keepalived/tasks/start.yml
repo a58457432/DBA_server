@@ -1,0 +1,2 @@
+- name: ensure started
+  service: name=keepalived state=started
