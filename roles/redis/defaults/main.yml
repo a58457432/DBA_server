@@ -1,0 +1,2 @@
+redis_maxmemory: 8GB
+redis_number: 1

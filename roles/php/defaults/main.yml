@@ -1,0 +1,2 @@
+app_group: "{{ hostname.split('-')[0] + '-' +  hostname.split('-')[1] + '-' + (hostname.split('-')[4]).split('.')[0] }}"
+

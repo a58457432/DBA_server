@@ -1,0 +1,8 @@
+- name: install php
+  yum: name=php state=latest
+
+- name: mkdir /data0/log-data
+  file: path=/data0/log-data mode=0777 state=directory
+
+- name: enable php as service
+  service: name=php-fpm enabled=yes state=started

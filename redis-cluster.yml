@@ -1,0 +1,6 @@
+---
+
+- name: install redis-cluster
+  hosts: all
+  roles:
+    - redis-cluster

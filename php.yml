@@ -1,0 +1,6 @@
+---
+
+- name: install php
+  hosts: all
+  roles:
+    - php

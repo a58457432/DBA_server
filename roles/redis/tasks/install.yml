@@ -1,0 +1,45 @@
+- shell: ls /etc/redis/redis*.conf | wc -l
+  register: current_number
+
+- set_fact: start={{ 6770 + current_number.stdout|int }}
+
+- set_fact: end={{ 6770 + current_number.stdout|int + redis_number|int -1 }}
+
+- name: copy redis-bin
+  file: src=/usr/local/webserver/redis-2.8.19/bin/{{ item }} dest=/usr/local/bin/{{ item }} owner=root group=root state=link
+  with_items:
+    - redis-server
+    - redis-cli
+    - redis-sentinel
+    - redis-benchmark
+
+- name: install pip
+  yum: name=python-pip state=latest
+
+- name: install redis python package
+  pip: name=redis
+
+- name: mkdir for redis
+  file: path=/data/redis/redis-{{ item }} state=directory
+  with_sequence: start={{ start }}  end={{ end }}
+
+- name: mkdir /etc/redis /hupu/cron/
+  file: path=/etc/redis state=directory
+  with_items:
+    - /etc/redis
+    - /hupu/cron
+
+- name: add crontab
+  file: path=/var/spool/cron/root state=touch
+
+- name: copy init.d/redis to server
+  template: src=redis.j2 dest=/etc/init.d/redis-{{ item }} owner=root group=root mode=0755
+  with_sequence: start={{ start }}  end={{ end }}
+
+- name: copy redis master config file
+  template: src=redis.conf.j2 dest=/etc/redis/redis-{{ item }}.conf owner=root group=root mode=0644
+  with_sequence: start={{ start }}  end={{ end }}
+
+- name: ensure redis started and start onboot
+  service: name=redis-{{ item }} state=started enabled=yes
+  with_sequence: start={{ start }}  end={{ end }}

@@ -1,0 +1,28 @@
+- set_fact: app_group="{{ hostname.split('-')[0] + '-' +  hostname.split('-')[1] + '-' + (hostname.split('-')[4]).split('.')[0] + '-' + (hostname.split('.')[-1]) }}"
+  when: (hostname.split('.')[-1]) == 'aliyun'
+
+- name: stat local php.ini
+  local_action: stat path={{ playbook_dir }}/roles/php/files/{{ app_group }}/php.ini
+  register: php_ini_stat
+  sudo: FALSE
+
+- name: stat local php-fpm.conf
+  local_action: stat path={{ playbook_dir }}/roles/php/files/{{ app_group }}/php-fpm.conf
+  register: php_conf_stat
+  sudo: FALSE
+
+- name: copy php.ini
+  copy: src={{ app_group }}/php.ini dest=/usr/local/webserver/php/lib/php.ini
+  when: php_ini_stat.stat.exists
+
+- name: copy php-fpm.conf
+  copy: src={{ app_group }}/php-fpm.conf dest=/usr/local/webserver/php/etc/php-fpm.conf
+  when: php_conf_stat.stat.exists
+
+- name: copy default php.ini
+  copy: src=default/php.ini dest=/usr/local/webserver/php/lib/php.ini
+  when: php_ini_stat.stat.exists == False
+
+- name: copy default php-fpm.conf
+  copy: src=default/php-fpm.conf dest=/usr/local/webserver/php/etc/php-fpm.conf
+  when: php_conf_stat.stat.exists == False

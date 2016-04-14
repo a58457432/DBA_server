@@ -1,0 +1,2 @@
+- name: ensure php reloaded
+  service: name=php-fpm state=reloaded

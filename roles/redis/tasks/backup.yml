@@ -1,0 +1,16 @@
+- name: mkdir /hupu/cron/
+  file: path={{ item }} state=directory
+  with_items:
+    - /hupu/cron/backup
+    - /data0/backup-data/redis
+
+- name: copy rsync config
+  copy: src={{ item }} dest=/hupu/cron/backup/{{ item }} mode=600
+  with_items:
+    - 'rsync.ps'
+
+- name: generate common cron backup
+  template: src=cron.redis.backup.sh.j2 dest=/hupu/cron/cron.redis.backup.sh owner=root group=root mode=0755
+
+- name: schedule redis backup scripts
+  cron: name="redis backup scripts" minute=0 hour=3 job="/bin/sh /hupu/cron/cron.redis.backup.sh >& /dev/null"
