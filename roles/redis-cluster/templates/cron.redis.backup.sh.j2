@@ -1,0 +1,114 @@
+#!/bin/bash
+#Update by Peter.Zhou
+#Date: 04.02.2015
+#Last Update Time: 08.14.2015
+
+PATH='/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin'
+redis_cli='/usr/local/bin/redis-cli'
+[ ! -f $redis_cli ] && redis_cli='/usr/local/webserver/redis/bin/redis-cli'
+port='6379'
+rdbsave='bgsave'
+aofsave='bgrewriteaof'
+backup_dir='/data0/backup-data/redis'
+date=`date +%Y%m%d%H`
+date_3hour=`date -d -3hour +%Y%m%d%H`
+datetime=`date '+%Y-%m-%d %T'`
+success='Backup success.'
+hostname=`hostname | awk -F '(-|_)' '{print $1}'`
+ip_suffix=`ip addr |grep -o '192\.168\.[0-9]*\.[0-9]*/2[3|4]' |awk -F'/' '{$1=substr($1,9,7); print $1}' |head -1`
+[ -z $ip_suffix ] && ip_suffix=`ip addr |grep -o '10\.31\.[0-9]*\.[0-9]*/24' |awk -F'/' '{$1=substr($1,9,7); print $1}' |head -1`
+vip=`ip addr |grep -o '192\.168\.[0-9]*\.[0-9]*/32' |wc -l`
+[ -z $vip ] && vip=`ip addr |grep -o '10\.31\.[0-9]*\.[0-9]*/32' |wc -l`
+logfile='/var/log/redis_backup_failed.log'
+#维护时间计数器
+MaintenaceCounter=0
+
+# 备份前标记维护时间
+function Maintenace() {
+    curl http://baixs.pub.hupu.com/api/benchs -XPUT -d "{\"ip\": \"{{ inventory_hostname }}\"}" -H "Content-Type:application/json" -ubaixs:hoopchina
+    sleep 180
+}
+
+# 备份完关闭维护时间
+function CloseMaintenace() {
+    curl http://baixs.pub.hupu.com/api/benchs -XDELETE -d "[{\"ip\": \"{{ inventory_hostname }}\"}]" -H "Content-Type:application/json" -ubaixs:hoopchina
+}
+
+# 推送到远程备份机器
+function push_backup (){       
+    rsync -au --password-file=/hupu/cron/backup/rsync.ps $backup_dir/ hupu@192.168.1.42::RedisBackup/$hostname$ip_suffix/
+} 
+
+function backup_dump_data () {
+    if [ ! -d "$backup_dir/" ]; then
+        mkdir -p $backup_dir/
+    fi
+    role=`$redis_cli -p $1 info |grep role |awk -F ':' '{print $NF}' |sed 's/\r//'`
+    if [[ $role == $'master' ]]; then
+        break
+    elif [[ "$role" == $'slave' ]]; then
+        cd $data_dir
+        /bin/cp -nf $aof_file $aof_file.${date}
+        gzip $aof_file.${date} 
+        mv *.gz ${backup_dir}/
+		
+
+        cd ${backup_dir}/
+	rm -f $aof_file.${date_3hour}.gz
+        ## delete befor 7 day backup data.
+        if [[ `pwd` == ${backup_dir}} ]];then
+            find ./ -name "$aof_file.*" -mtime +1 |xargs /bin/rm -rf
+        fi
+    fi
+}
+
+for i in ${port[*]} 
+    do  
+    #循环计数器    
+    count=0
+    #redis实例变量
+    data_dir=`$redis_cli -p $i config get dir |tail -1`
+    [ -z $data_dir ] && data_dir=`$redis_cli -p $i config get dir |tail -1`
+    data_file=`$redis_cli -p $i config get dir |tail -1 |awk -F'/' '{print $NF}'`
+    [ -z $data_file ] && data_file=`$redis_cli -p $i config get dir |tail -1 |awk -F'/' '{print $NF}'`
+    conf_file=`$redis_cli -p $i info server |grep config_file |awk -F':' '{print $NF}' |sed 's/\r//'`
+    aof_file=`grep 'appendfilename' $conf_file |awk '{print $NF}'`        
+    
+    #判断是否是cache，1为是，0为否
+    is_appendonly=`$redis_cli -p $i config get appendonly|grep yes|wc -l`
+    [ -z $is_appendonly ] && is_appendonly=`$redis_cli -p $i config get appendonly|grep yes|wc -l`
+    if [[ $is_appendonly -eq 0 && $MaintenaceCounter -eq 0 ]]; then
+        Maintenace
+        let MaintenaceCounter++
+    fi
+    if [[ $is_appendonly -eq 0 ]]; then
+        $redis_cli -p $i $aofsave
+        sleep 5
+        while true
+            do  
+            #aof重写完成标志位，大于0时表示临时文件存在，备份未完成。否则跳出循环。 
+            is_temp_aof=`ls|grep temp*.aof|wc -l`
+            if [ $is_temp_aof -gt 0 ]; then
+                sleep 5
+                #判断循环计数器是否超过60（10分钟），超过则将aof文件重写错误记录错误日志。跳出循环执行下个实例。
+                if [ $count -gt 120 ]; then
+                    echo "BGRewrite failed! Port is : $port, Time is : $datetime" >> $logfile
+                    break
+                else
+                    let count+=1
+                    continue
+                fi
+            else
+                #aof文件重写完成，执行备份操作。
+                backup_dump_data $i
+                break
+            fi
+        done
+    else 
+        continue
+    fi
+done
+
+push_backup
+
+CloseMaintenace

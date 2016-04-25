@@ -1,0 +1,30 @@
+- name: install redis
+  yum: name={{ item }} state=latest
+  with_items:
+    - redis
+    - rubygems
+    - python-pip
+
+- name: install redis gem module
+  gem: name=redis
+
+- name: install redis python package
+  pip: name=redis
+
+- name: mkdir for redis
+  file: path=/data/redis state=directory
+
+- name: mkdir /etc/redis /hupu/cron/
+  file: path=/etc/redis state=directory
+  with_items:
+    - /etc/redis
+    - /hupu/cron
+
+- name: copy init.d/redis to server
+  template: src=redis.j2 dest=/etc/init.d/redis owner=root group=root mode=0755
+
+- name: copy redis config file
+  template: src=redis.conf.j2 dest=/etc/redis/redis.conf owner=root group=root mode=0644
+
+- name: ensure redis started and start onboot
+  service: name=redis state=started enabled=yes
