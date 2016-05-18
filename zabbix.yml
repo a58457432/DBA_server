@@ -1,1 +1,6 @@
-112
+---
+
+- name: install zabbix
+  hosts: all
+  roles:
+    - zabbix

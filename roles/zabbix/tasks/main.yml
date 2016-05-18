@@ -1,0 +1,45 @@
+---
+- name: create zabbix user 
+  user: name=zabbix  state=present uid=702
+
+- name: create software dir
+  file: dest=/tools/software state=directory
+ 
+- name: unarchive zabbix_agent pkg
+  unarchive: src=/tools/software/zabbix-{{zabbix_version}}.tar.gz  dest=/tools/software
+
+
+- name: install zabbix_agent
+  command: './configure  --prefix=/usr/local/zabbix   --enable-agent '
+  args: 
+    chdir: /tools/software/zabbix-{{zabbix_version}} 
+
+- name: make and make intall 
+  shell: 'make && make install '
+  args: 
+    chdir: /tools/software/zabbix-{{zabbix_version}} 
+
+- name: create directory
+  file: dest=/usr/local/zabbix/{{item}} state=directory  owner=zabbix mode=744 
+  with_items:
+    - externalscripts
+    - log
+
+- name: unarchive  monitor 
+  unarchive: src=/tools/software/monitor.tar.gz   dest=/usr/local/zabbix/externalscripts/
+
+- name: add service to init 
+  template: src=/opt/HI_AnBL/roles/zabbix/templates/zabbix_agentd.j2  dest=/etc/init.d/zabbix_agentd   owner=root mode=0755
+
+- name: copy conf to etc
+  template: src=/opt/HI_AnBL/roles/zabbix/templates/zabbix_agentd.conf.j2  dest=/usr/local/zabbix/etc/zabbix_agentd.conf
+
+
+- name: grant install directory
+  file: path=/usr/local/zabbix   owner=zabbix group=zabbix recurse=yes
+
+- name: write into crontab 
+  shell: echo '*  *  *  *  *  /usr/bin/python  /usr/local/zabbix/externalscripts/monitor/redis_db_status.py' >> /var/spool/cron/root
+
+- name: start zabbix_agentd
+  service: name=zabbix_agentd  state=started  enabled=yes
